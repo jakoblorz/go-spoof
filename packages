@@ -1,0 +1,17 @@
+global github.com/nsf/gocode
+global github.com/uudashr/gopkgs/cmd/gopkgs
+global github.com/ramya-rao-a/go-outline
+global github.com/acroca/go-symbols
+global golang.org/x/tools/cmd/guru
+global golang.org/x/tools/cmd/gorename
+global github.com/fatih/gomodifytags
+global github.com/haya14busa/goplay/cmd/goplay
+global github.com/josharian/impl
+global github.com/rogpeppe/godef
+global golang.org/x/tools/cmd/godoc
+global sourcegraph.com/sqs/goreturns
+global github.com/golang/lint/golint
+global github.com/cweill/gotests/...
+global github.com/derekparker/delve/cmd/dlv
+local golang.org/x/crypto/ssh
+local golang.org/x/crypto/ssh/agent
