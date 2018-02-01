@@ -57,11 +57,10 @@ func main() {
 	}
 
 	tunnel := &tunnel.Tunnel{
-		Network: "udp",
-		Config:  &ssh.ClientConfig{User: cfg.SSHUser, Auth: []ssh.AuthMethod{authMethod}},
-		Proxy:   &tunnel.Endpoint{Host: cfg.SSHHost, Port: cfg.SSHPort},
-		Source:  &tunnel.Endpoint{Host: cfg.SourceHost, Port: cfg.SourcePort},
-		Target:  &tunnel.Endpoint{Host: cfg.TargetHost, Port: cfg.TargetPort},
+		Config: &ssh.ClientConfig{User: cfg.SSHUser, Auth: []ssh.AuthMethod{authMethod}},
+		Proxy:  &tunnel.Endpoint{Host: cfg.SSHHost, Port: cfg.SSHPort},
+		Source: &tunnel.Endpoint{Host: cfg.SourceHost, Port: cfg.SourcePort},
+		Target: &tunnel.Endpoint{Host: cfg.TargetHost, Port: cfg.TargetPort},
 	}
 
 	if err := tunnel.Start(); err != nil {
