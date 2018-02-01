@@ -3,6 +3,7 @@ package tunnel
 import (
 	"fmt"
 	"io"
+	"log"
 	"net"
 
 	"golang.org/x/crypto/ssh"
@@ -25,10 +26,23 @@ type Tunnel struct {
 	Config  *ssh.ClientConfig
 }
 
+// GetOwnIP gets own IP Address
+func GetOwnIP() net.IP {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+
+	return localAddr.IP
+}
+
 // Start starts a listener on the Source Server. Once connected it spawns
 // a forwarding session (Forward())
 func (tunnel *Tunnel) Start() error {
-	listener, err := net.Listen(tunnel.Network, tunnel.Source.String())
+	listener, err := net.Listen(tunnel.Network, fmt.Sprintf(":%d", tunnel.Source.Port))
 	if err != nil {
 		fmt.Printf("Could not connect to Source Server %s\n", err)
 		return err
@@ -64,13 +78,13 @@ func (tunnel *Tunnel) StartFromListener(listener net.Listener) error {
 // Forward connectes to the SSH Server, then connecting
 // to the Target Server
 func (tunnel *Tunnel) Forward(conn net.Conn) {
-	sshconn, err := ssh.Dial(tunnel.Network, tunnel.Proxy.String(), tunnel.Config)
+	sshconn, err := ssh.Dial(tunnel.Network, tunnel.Proxy.String(tunnel.Network), tunnel.Config)
 	if err != nil {
 		fmt.Printf("Could not connect to SSH-Proxy Server: %s\n", err)
 		return
 	}
 
-	connection, err := sshconn.Dial(tunnel.Network, tunnel.Target.String())
+	connection, err := sshconn.Dial(tunnel.Network, tunnel.Target.String(tunnel.Network))
 	if err != nil {
 		fmt.Printf("Could not connect to Target Server %s\n", err)
 	}
@@ -89,5 +103,5 @@ func (tunnel *Tunnel) Forward(conn net.Conn) {
 
 // Dial connects to the Source Server
 func (tunnel *Tunnel) Dial() (net.Conn, error) {
-	return net.Dial(tunnel.Network, tunnel.Source.String())
+	return net.Dial(tunnel.Network, tunnel.Source.String(tunnel.Network))
 }

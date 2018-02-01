@@ -9,6 +9,6 @@ type Endpoint struct {
 	Port int
 }
 
-func (endpoint *Endpoint) String() string {
-	return fmt.Sprintf("%s:%d", endpoint.Host, endpoint.Port)
+func (endpoint *Endpoint) String(network string) string {
+	return fmt.Sprintf("%s://[%s]:%d", network, endpoint.Host, endpoint.Port)
 }

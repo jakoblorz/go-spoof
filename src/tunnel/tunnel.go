@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	tunnel "tunnel/lib"
@@ -27,31 +28,36 @@ func PublicKeyAuthMethod(file string, password string) (ssh.AuthMethod, error) {
 }
 
 type TunnelEnvironmentConfig struct {
-	CertificatePath string `ENV:"CERTPATH"`
-	CerfiticatePass string `ENV:"CERTPASS"`
-	SSHUser         string `ENV:"SSHUSER"`
-	SSHHost         string `ENV:"SSHHOST"`
-	SSHPort         int    `ENV:"SSHPORT"`
-	TargetHost      string `ENV:"TARGETHOST"`
-	TargetPort      int    `ENV:"TARGETPORT"`
-	SourceHost      string `ENV:"SOURCEHOST"`
-	SourcePort      int    `ENV:"SOURCEPORT"`
+	CertificatePath string `env:"CERTPATH"`
+	CertificatePass string `env:"CERTPASS"`
+	SSHUser         string `env:"SSHUSER"`
+	SSHHost         string `env:"SSHHOST"`
+	SSHPort         int    `env:"SSHPORT"`
+	TargetHost      string `env:"TARGETHOST"`
+	TargetPort      int    `env:"TARGETPORT"`
+	SourceHost      string `env:"SOURCEHOST"`
+	SourcePort      int    `env:"SOURCEPORT"`
 }
 
 func main() {
 
 	// parse environment
 	cfg := TunnelEnvironmentConfig{}
-	env.Parse(cfg)
+	if err := env.Parse(&cfg); err != nil {
+		log.Fatalf("Error Parsing Environment: %s", err)
+		return
+	}
 
-	authMethod, err := PublicKeyAuthMethod(cfg.CertificatePath, cfg.CerfiticatePass)
+	fmt.Printf("%+v\n", cfg)
+
+	authMethod, err := PublicKeyAuthMethod(cfg.CertificatePath, cfg.CertificatePass)
 	if err != nil {
-		log.Fatalf("Error reading/decrypting private key: %s", err)
+		log.Fatalf("Error reading private key: %s", err)
 		return
 	}
 
 	tunnel := &tunnel.Tunnel{
-		Network: "upd",
+		Network: "udp",
 		Config:  &ssh.ClientConfig{User: cfg.SSHUser, Auth: []ssh.AuthMethod{authMethod}},
 		Proxy:   &tunnel.Endpoint{Host: cfg.SSHHost, Port: cfg.SSHPort},
 		Source:  &tunnel.Endpoint{Host: cfg.SourceHost, Port: cfg.SourcePort},
