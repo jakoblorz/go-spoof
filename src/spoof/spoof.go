@@ -1,65 +1,66 @@
 package main
 
 import (
-	"io/ioutil"
+	"bufio"
+	"fmt"
 	"log"
 	"net"
-	"net/url"
-	"strconv"
 
-	"golang.org/x/crypto/ssh"
+	"github.com/caarlos0/env"
 )
 
-// PublicKeyAuthMethod creates a Public Key as ssh.AuthMethod
-// from a private key file
-func PublicKeyAuthMethod(file string, password string) (ssh.AuthMethod, error) {
-	buffer, err := ioutil.ReadFile(file)
-	if err != nil {
-		return nil, err
-	}
-
-	key, err := ssh.ParsePrivateKeyWithPassphrase(buffer, []byte(password))
-	if err != nil {
-		return nil, err
-	}
-
-	return ssh.PublicKeys(key), nil
-}
-
-// GetOwnIP gets own IP Address
-func GetOwnIP() net.IP {
-	conn, err := net.Dial("udp", "8.8.8.8:80")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close()
-
-	localAddr := conn.LocalAddr().(*net.UDPAddr)
-
-	return localAddr.IP
-}
-
-// ParseAddress splits the address into its parts and extracts
-// the hostname and the port
-func ParseAddress(address string) (string, int64, error) {
-	parsed, err := url.Parse(address)
-	if err != nil {
-		return "", 0, err
-	}
-
-	host, _port, err := net.SplitHostPort(parsed.Host)
-	if err != nil {
-		return "", 0, err
-	}
-
-	port, err := strconv.ParseInt(_port, 10, 0)
-	if err != nil {
-		return "", 0, err
-	}
-
-	return host, port, nil
+// SpoofEnvironmentConfig recieves the Environment Variables
+type SpoofEnvironmentConfig struct {
+	TargetHost string `env:"TARGETHOST"`
+	TargetPort int    `env:"TARGETPORT"`
+	SourcePort int    `env:"SOURCEPORT"`
+	Message    string `env:"MESSAGE"`
 }
 
 func main() {
-	log.Printf("Spoofing will soon be starting\n")
+
+	// parse environment
+	cfg := SpoofEnvironmentConfig{}
+	if err := env.Parse(&cfg); err != nil {
+		log.Fatalf("Error Parsing Environment: %s", err)
+		return
+	}
+
+	fmt.Printf("%+v\n", cfg)
+
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		log.Fatalf("Error Resolving Source UDP Address: %s\n", err)
+		return
+	}
+
+	local := &net.UDPAddr{
+		IP:   conn.LocalAddr().(*net.UDPAddr).IP,
+		Port: cfg.SourcePort,
+	}
+
+	if err := conn.Close(); err != nil {
+		log.Fatalf("Error Closing Source UDP Address Resolving Connection: %s", err)
+		return
+	}
+
+	remote, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", cfg.TargetHost, cfg.TargetPort))
+	if err != nil {
+		log.Fatalf("Error Resolving Remote UDP Address: %s\n", err)
+	}
+
+	connection, err := net.DialUDP("udp", local, remote)
+	if err != nil {
+		log.Fatalf("Error Connecting To Remote Server: %s\n", err)
+	}
+
+	defer connection.Close()
+
+	connection.Write([]byte(cfg.Message))
+
+	if message, err := bufio.NewReader(connection).ReadString('\n'); err != nil {
+		log.Fatalf("Error recieving Response: %s", err)
+	} else {
+		fmt.Printf("Recieved response: %s\n", message)
+	}
 }
