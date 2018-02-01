@@ -27,4 +27,4 @@ export GOPATH="$(pwd)"
 export GOBIN="$(pwd)/bin"
 
 
-go install "$(pwd)/src/spoof.go"
+go install "$(pwd)/src/spoof/spoof.go"

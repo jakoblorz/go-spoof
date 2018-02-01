@@ -15,3 +15,4 @@ global github.com/cweill/gotests/...
 global github.com/derekparker/delve/cmd/dlv
 local golang.org/x/crypto/ssh
 local golang.org/x/crypto/ssh/agent
+local github.com/caarlos0/env
