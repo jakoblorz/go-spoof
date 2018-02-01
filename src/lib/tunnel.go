@@ -86,13 +86,28 @@ func (tunnel *Tunnel) Start() error {
 
 	defer listener.Close()
 
+	return tunnel.StartFromListener(listener)
+}
+
+// StartFromConnection starts a forwarding session (Forward()) right
+// from an existing Connection
+func (tunnel *Tunnel) StartFromConnection(connection net.Conn) error {
+	go tunnel.Forward(connection)
+
+	return nil
+}
+
+// StartFromListener starts a forwarding session (Forward()) right
+// when a connection is established
+func (tunnel *Tunnel) StartFromListener(listener net.Listener) error {
+
 	for {
 		connection, err := listener.Accept()
 		if err != nil {
 			return err
 		}
 
-		go tunnel.Forward(connection)
+		tunnel.StartFromConnection(connection)
 	}
 }
 
