@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"log"
 	"net"
@@ -53,23 +54,35 @@ func main() {
 		log.Fatalf("Error Connecting To Remote Server: %s\n", err)
 	}
 
-	defer connection.Close()
+	fmt.Printf("> Locale Address %+v\n", connection.LocalAddr())
+	fmt.Printf("> Remote Address %+v\n", connection.RemoteAddr())
 
-	fmt.Printf("Writing Message %s\n", cfg.Message)
+	fmt.Printf("> Writing Message \"%s\"", cfg.Message)
 
-	if _, err := connection.Write([]byte(cfg.Message)); err != nil {
-		log.Fatalf("Error Writing Message: %s\n", err)
+	wbytes, err := connection.Write([]byte(cfg.Message))
+	if err != nil {
+		log.Fatalf(" -> Error Writing Message: %s\n", err)
 		return
 	}
 
-	fmt.Print("Wrote Message, Waiting for Response\n")
+	fmt.Printf(" -> Wrote Total Of %d Bytes\n", wbytes)
+
+	defer connection.Close()
 
 	buffer := make([]byte, 1024)
 	bytes, _, err := connection.ReadFromUDP(buffer)
 	if err != nil {
-		log.Fatalf("Error Recieving Message: %s\n", err)
+		log.Fatalf("> Error Recieving Message: %s\n", err)
 		return
 	}
 
-	fmt.Printf("Recieved Message (%d bytes): %02X\n", bytes, buffer[0:bytes])
+	fmt.Printf("> Recieved Message (%d bytes): %02X\n", bytes, buffer[0:bytes])
+
+	msg, err := hex.DecodeString(fmt.Sprintf("%02X", buffer[0:bytes]))
+	if err != nil {
+		log.Fatalf("> Error Converting Byte Buffer To String: %s\n", err)
+		return
+	}
+
+	fmt.Printf("%s\n", string(msg))
 }
