@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"log"
 	"net"
@@ -56,11 +55,21 @@ func main() {
 
 	defer connection.Close()
 
-	connection.Write([]byte(cfg.Message))
+	fmt.Printf("Writing Message %s\n", cfg.Message)
 
-	if message, err := bufio.NewReader(connection).ReadString('\n'); err != nil {
-		log.Fatalf("Error recieving Response: %s", err)
-	} else {
-		fmt.Printf("Recieved response: %s\n", message)
+	if _, err := connection.Write([]byte(cfg.Message)); err != nil {
+		log.Fatalf("Error Writing Message: %s\n", err)
+		return
 	}
+
+	fmt.Print("Wrote Message, Waiting for Response\n")
+
+	buffer := make([]byte, 1024)
+	bytes, _, err := connection.ReadFromUDP(buffer)
+	if err != nil {
+		log.Fatalf("Error Recieving Message: %s\n", err)
+		return
+	}
+
+	fmt.Printf("Recieved Message (%d bytes): %02X\n", bytes, buffer[0:bytes])
 }
