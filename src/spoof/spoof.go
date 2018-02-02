@@ -84,5 +84,5 @@ func main() {
 		return
 	}
 
-	fmt.Printf("%s\n", string(msg))
+	fmt.Printf("\n%s\n", string(msg))
 }
