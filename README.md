@@ -1,4 +1,4 @@
 # go-spoof
 ```bash
-echo jl15caga | nc -u -p 13338 securitylab.sit.tu-darmstadt.de 13337
+echo <enter the datagram content here> | nc -u -p 13338 securitylab.sit.tu-darmstadt.de 13337
 ```
